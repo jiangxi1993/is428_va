@@ -5,10 +5,7 @@
 #    4. Application UI
 
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally')
-
-
-
+packages = c('ggbeeswarm','sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally')
 
 
 for (p in packages){
@@ -61,6 +58,14 @@ out_pop_10_19[[2]] <- toupper(out_pop_10_19[[2]])
 view(out_pop_10_19)
 
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
+
+
+# Beeswarm plot
+ggplot(population_data_10_19,aes(PA, Pop)) + 
+    geom_jitter()
+
+
+
 
 
 #UI Section
