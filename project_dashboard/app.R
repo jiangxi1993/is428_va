@@ -21,13 +21,13 @@ library(dplyr)
 
 
 
-SG_2014_planningarea <- st_read(dsn = "./Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
+SG_2014_planningarea <- st_read(dsn = "./../Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
 
 
-population_data_10_19<-read_csv("../Data/Residential_Planning/respopagesextod2011to2019.csv")
+population_data_10_19<-read_csv("./../Data/Residential_Planning/respopagesextod2011to2019.csv")
 
 
-population_data_10_19<-read_csv("./Data/Residential_Planning/respopagesextod2011to2019.csv")
+population_data_10_19<-read_csv("./../Data/Residential_Planning/respopagesextod2011to2019.csv")
 
 young=c("0_to_4","10_to_14","15_to_19","20_to_24")
 active=c("25_to_29","30_to_34","35_to_39","40_to_44","45_to_49","5_to_9","50_to_54","55_to_59","60_to_64")
