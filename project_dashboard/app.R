@@ -1,3 +1,9 @@
+#Contents:
+#    1. Package Imports
+#    2. Loading of data
+#    3. Visualisation Functions
+#    4. Application UI
+
 #Package
 packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally')
 
@@ -57,6 +63,12 @@ view(out_pop_10_19)
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
 
 
+
+
+# Loading of Data:
+residential_data_2019 <- read_csv("Data/Residential_Planning/respopagesextod2011to2019.csv")
+
+ls()
 
 
 #UI Section
