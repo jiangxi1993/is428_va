@@ -29,7 +29,7 @@ library(dplyr)
 
 SG_2014_planningarea <- st_read(dsn = "../Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
 
-population_data_10_19<-read_csv("../Data/Data/Residential_Planning_2000_to_2019/respopagesextod2011to2019.csv")
+population_data_10_19<-read_csv("../Data/Residential_Planning/respopagesextod2011to2019.csv")
 
 
 
@@ -61,14 +61,6 @@ out_pop_10_19[[2]] <- toupper(out_pop_10_19[[2]])
 view(out_pop_10_19)
 
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
-
-
-
-
-# Loading of Data:
-residential_data_2019 <- read_csv("Data/Residential_Planning/respopagesextod2011to2019.csv")
-
-ls()
 
 
 #UI Section
