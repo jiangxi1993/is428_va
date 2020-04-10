@@ -1,9 +1,3 @@
-#Contents:
-#    1. Package Imports
-#    2. Loading of data
-#    3. Visualisation Functions
-#    4. Application UI
-
 #Package
 packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally')
 
@@ -27,11 +21,9 @@ library(dplyr)
 
 
 
-SG_2014_planningarea <- st_read(dsn = "../Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
+SG_2014_planningarea <- st_read(dsn = "./Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
 
-population_data_10_19<-read_csv("../Data/Data/Residential_Planning_2000_to_2019/respopagesextod2011to2019.csv")
-
-
+population_data_10_19<-read_csv("./Data/Residential_Planning/respopagesextod2011to2019.csv")
 
 young=c("0_to_4","10_to_14","15_to_19","20_to_24")
 active=c("25_to_29","30_to_34","35_to_39","40_to_44","45_to_49","5_to_9","50_to_54","55_to_59","60_to_64")
@@ -62,51 +54,97 @@ view(out_pop_10_19)
 
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
 
+str(SG_2014_planningarea_pop )
 
 
 
-# Loading of Data:
-residential_data_2019 <- read_csv("Data/Residential_Planning/respopagesextod2011to2019.csv")
 
-ls()
 
 
 #UI Section
-
+tmap_mode("plot")
 ui <- dashboardPage(skin = "green",
-
-    #---------------------------- dashboard header ----------------------------                                    
-    header <- dashboardHeader(title = "Precision Policy And Planning",
-                titleWidth = 300),
-
-    
-    #--------------------------- dashboard sidebar ----------------------------
-    sidebar <-dashboardSidebar(
-    sidebarMenu(
-        menuItem(text = "Introduction",
-                 tabName = "Introduction",
-                 icon = icon("home")
-                 ),
-        menuItem(text = "Dashboard 1",
-                 tabName = "Dashboard 1",
-                 icon = icon("dice-one")
-                 ),
-        menuItem(text = "Dashboard 2",
-                 tabName = "Dashboard 2",
-                 icon = icon("dice-two")
-                 )
-        )
-    ),
-    
-    #--------------------------- dashboard sidebar ----------------------------
-    body <- dashboardBody()
-    
+                    
+                    #---------------------------- dashboard header ----------------------------                                    
+                    header <- dashboardHeader(title = "Precision Policy And Planning",
+                                              titleWidth = 300),
+                    
+                    
+                    #--------------------------- dashboard sidebar ----------------------------
+                    sidebar <-dashboardSidebar(
+                        sidebarMenu(
+                            menuItem(text = "Introduction",
+                                     tabName = "Introduction",
+                                     icon = icon("home")
+                            ),
+                            menuItem(text = "Dashboard 1",
+                                     tabName = "Dashboard 1",
+                                     icon = icon("dice-one")
+                            ),
+                            menuItem(text = "Dashboard 2",
+                                     tabName = "Dashboard 2",
+                                     icon = icon("dice-two")
+                            )
+                        )
+                    ),
+                    
+                    #--------------------------- dashboard sidebar ----------------------------
+                    body <- dashboardBody(
+                        tabItems(
+                            tabItem(tabName = "Introduction",
+                                    column(12,height=550,box(width=9,title="Singapore population distribution by Planning Area",
+                                
+                                        tmapOutput("pop_pa_map",height = 550)
+                                        
+                                        ))
+                                    
+                                    
+                                    
+                                    
+                                    
+                            ),
+                            
+                            
+                            tabItem(tabName = "Dashboard 1",
+                                    h2("Widgets tab content")
+                            )
+                        
+                        
+                        
+                        
+                    )
+                    )
+                    
 )
 
 
-server <- function(input, output) {
- 
-}
+server <- function(input, output, session) {
+
+    
+    output$pop_pa_map <- renderTmap({
+        tmap_mode("plot")
+        tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==2019,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
+                     legend.hist = TRUE, 
+                     legend.is.portrait = TRUE,
+                     legend.hist.z = 0.2)+ 
+            tm_compass(type="arrow", size = 2) +
+            tm_scale_bar(width = 0.45) +
+            tm_grid() +tm_text("PLN_AREA_C", size =0.7)+ tm_borders(alpha = 0.6)+ tm_layout(legend.outside = TRUE,
+                                                                                            legend.height = 0.45, 
+                                                                                            legend.width = 4.0,
+                                                                                            legend.position = c("right", "bottom"),
+                                                                                            frame = FALSE)
+        
+    })
+    
+    observe({
+        
+    })
+
+    
+    
+}	
+
 
 
 
