@@ -1,0 +1,54 @@
+---
+title: "Beeswarm"
+author: "Choy Yu Min Justin"
+date: "4/10/2020"
+output: html_document
+---
+
+
+Import packages
+```{r}
+packages = c('ggbeeswarm','ggplot2','dplyr','readr', 'gganimate')
+
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+
+```
+
+
+LoadData
+```{r}
+population_data_10_19 <- read_csv("../Data/Residential_Planning/respopagesextod2011to2019.csv")
+
+Population_by_PA <- population_data_10_19 %>%
+  group_by(Time,PA, AG)%>%
+  summarise(Pop_total = sum(Pop))
+
+Population_by_PA$Dot_per_500 = Population_by_PA$Pop_total %/% 500
+
+
+# test filter 
+Population_by_PA %>%
+  filter(PA=="Ang Mo Kio")
+  
+
+ggplot(Population_by_PA %>% filter(Dot_per_500 > 0,AG =="0_to_4", Time=="1/1/2019"), aes(x = PA, y = Dot_per_500, label = PA, color = AG)) +
+  geom_beeswarm(groupOnX = TRUE,na.rm = TRUE, dodge.width = 1)
+
+
+```
+
+gganimate
+```{r}
+Population_by_PA$Year = as.Date(Population_by_PA$Time)
+ggplot(Population_by_PA %>% filter(Dot_per_500 >= 0, Year == "1/1/2012"), aes(x = PA, y = Dot_per_500,color = AG)) +
+geom_beeswarm(groupOnX = TRUE,na.rm = TRUE) +
+labs(title = "Year {frame_time}") +
+transition_time(Year) +
+ease_aes("linear")
+```
+
