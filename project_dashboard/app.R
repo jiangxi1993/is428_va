@@ -1,5 +1,5 @@
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate')
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski')
 
 
 
@@ -80,6 +80,8 @@ df_box_3 <- df_box_3[order(Total_pop), .SD[1:5], Time]
 
 view(df_box_3)
 
+
+
 # Preparation for bar chart tail 5 BOX 4
 
 agg_year_total <- out_pop_10_19[, sum(Total_pop), by = Time]
@@ -88,10 +90,17 @@ names(agg_year_total)[2] <- "Total_population"
 
 view(agg_year_total)
 
+df_region=SG_2014_planningarea_pop %>% st_drop_geometry()
+
+view(df_region)
+class(df_region)
+
+
+Line_df=merge(x = agg_year_total, y = df_year_central, by = "Time", all.x = TRUE)
 
 
 
-
+#view(Line_df5)
 
 #UI Section
 
@@ -126,24 +135,34 @@ ui <- dashboardPage(skin = "green",
                     body <- dashboardBody(
                         tabItems(
                             tabItem(tabName = "Introduction",
-                                    column(12,height=550,box(width=7,title="Singapore population distribution by Planning Area",
+                                    column(7,height=550,box(width=NULL,title="Singapore population distribution by Planning Area",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
-                                        ,box(width=5,title="Contro Panel", sliderInput("slider", "Year :", min = 2011, max=2019,8)
+                                        
+                                        ,
+                                        box(width=NULL,title="Total Singapore Population by Region"
+                                           , plotOutput("pop_pa_top_reg", height = 300)
+                                             
+                                        )
                                         
                                         )
-                                        ,box(width=5,title="Planning Area Population Top 5",plotOutput("pop_pa_top", height = 300)
+                                       ,
+                                    
+                                    column(5,
+                                        
+                                        box(width=NULL,title="Contro Panel", sliderInput("slider", "Year :", min = 2011, max=2019,8)
+                                             
+                                        )
+                                        ,box(width=NULL,title="Planning Area Population Top 5",plotOutput("pop_pa_top", height = 300)
                                              
                                              
                                         )
-                                        ,box(width=5,title="Planning Area Population Bottom 5",plotOutput("pop_pa_top2", height = 300)
+                                        ,box(width=NULL,title="Planning Area Population Bottom 5",plotOutput("pop_pa_top2", height = 300)
                                              
                                              
-                                        )
-                                        ,box(width=5,title="Planning Area Population Bottom 5"
-                                             
-                                             
-                                        )
+                                        
+                                        
+                                    )
                                         
                                         
                                         
@@ -186,6 +205,13 @@ server <- function(input, output, session) {
                                                                                             frame = FALSE)
     })
     
+    output$reg <- renderPlot({
+        ggplot(data=df_box_2[df_box_2$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
+            geom_bar(stat="identity") + theme(legend.position="bottom")+
+            geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
+        
+        
+    })
     
     
     

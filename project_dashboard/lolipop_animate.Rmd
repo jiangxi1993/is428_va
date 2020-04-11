@@ -7,7 +7,7 @@ output: html_document
 
 Import packages
 ```{r}
-packages = c('ggplot2','dplyr','readr', 'gganimate','scales', 'lubridate','animation','stringr','gapminder')
+packages = c('ggplot2','dplyr','readr', 'gganimate','scales', 'lubridate','animation','stringr','gapminder','png','gifski')
 
 for (p in packages){
   if(!require(p, character.only = T)){
