@@ -7,7 +7,7 @@ output: html_document
 
 Import packages
 ```{r}
-packages = c('ggplot2','dplyr','readr', 'gganimate', 'lubridate','animation','stringr')
+packages = c('ggplot2','dplyr','readr', 'gganimate','scales', 'lubridate','animation','stringr','gapminder')
 
 for (p in packages){
   if(!require(p, character.only = T)){
@@ -19,6 +19,10 @@ for (p in packages){
 ```
 
 LoadData
+```{r}
+```
+
+
 ```{r}
 population_data_10_19 <- read_csv("../Data/Residential_Planning/respopagesextod2011to2019.csv")
 
@@ -33,7 +37,10 @@ Population_by_PA
 ```
 
 ```{r}
-ggplot(Population_by_PA,
+
+library(gganimate)
+
+p<- ggplot(Population_by_PA,
        aes(x = reorder(PA, Pop_total), y = Pop_total, color = PA)) +
   geom_point(stat = 'identity', size = 5) +
   geom_segment(aes(
@@ -42,10 +49,19 @@ ggplot(Population_by_PA,
     yend = Pop_total,
     xend = PA)
   )+
-  coord_flip() +
-  labs(title = "Year: {frame_time}") +
-  theme(legend.position = "none") + 
-  transition_time(Year)+
-  ease_aes("linear")
+  coord_flip() 
 ```
+
+
+```{r}
+z<- p +transition_states(Year,transition_length = 1,state_length = 2)+transition_time(Year)+labs(title = "Year: {as.integer(frame_time)}") +
+  theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)
+
+
+animate(z)
+```
+```{r}
+
+```
+
 

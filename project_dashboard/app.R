@@ -17,7 +17,7 @@ detach("package:dplyr")
 library(dplyr)
 
 
-#Preparation for data
+#Preparation for data map box 1
 
 
 
@@ -40,11 +40,14 @@ col_order <- c("Time" ,"Sex" ,"x.0_to_4" , "x.5_to_9", "x.10_to_14","x.15_to_19"
 
 pop_reordered_10_19<- out[, col_order]
 
+
 popdf_age=mutate(population_data_10_19 ,AgeGroup=ifelse(population_data_10_19$AG %in% young,"Young",ifelse(population_data_10_19$AG%in% active,"Economy Active","Aged"))) %>%select(-AG)%>%arrange(Time) %>% mutate(AgeGroup=factor(AgeGroup))
 
 agg_pop <- with(popdf_age ,aggregate(Pop, by = list(Time = Time,PA=PA,AgeGroup=AgeGroup ), FUN = sum))
 
 out_pop <- reshape(agg_pop, timevar = "AgeGroup", idvar = c("Time","PA"), direction = "wide")
+
+
 
 out_pop <-out_pop %>% mutate(Total_pop = select(., 3:5) %>% rowSums()) 
 out_pop <-out_pop %>% mutate(Young_ratio=x.Young/Total_pop)
@@ -58,12 +61,41 @@ view(out_pop_10_19)
 
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
 
-str(SG_2014_planningarea_pop )
+view(SG_2014_planningarea_pop )
+
+
+# Preparation for bar chart top 5 BOX 2
+df_box_2 <- out_pop_10_19
+
+setDT(df_box_2)
+df_box_2 <- df_box_2[order(-Total_pop), .SD[1:5], Time]
+
+view(df_box_2)
+
+# Preparation for bar chart tail 5 BOX 3
+df_box_3 <- out_pop_10_19[out_pop_10_19$Total_pop>1,]
+
+setDT(df_box_2)
+df_box_3 <- df_box_3[order(Total_pop), .SD[1:5], Time]
+
+view(df_box_3)
+
+# Preparation for bar chart tail 5 BOX 4
+
+agg_year_total <- out_pop_10_19[, sum(Total_pop), by = Time]
+
+names(agg_year_total)[2] <- "Total_population"
+
+view(agg_year_total)
+
+
 
 
 
 
 #UI Section
+
+
 tmap_mode("plot")
 ui <- dashboardPage(skin = "green",
                     
@@ -94,19 +126,29 @@ ui <- dashboardPage(skin = "green",
                     body <- dashboardBody(
                         tabItems(
                             tabItem(tabName = "Introduction",
-                                    column(12,height=550,box(width=9,title="Singapore population distribution by Planning Area",
+                                    column(12,height=550,box(width=7,title="Singapore population distribution by Planning Area",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
-                                        ,box(width=3,title="Contro Panel", sliderInput("slider", "Year :", min = 2011, max=2019,8)
+                                        ,box(width=5,title="Contro Panel", sliderInput("slider", "Year :", min = 2011, max=2019,8)
                                         
                                         )
-                                        ,box(width=3,title="Planning Area Highest Population", sliderInput("slider", "Year :", min = 2011, max=2019,8)
+                                        ,box(width=5,title="Planning Area Population Top 5",plotOutput("pop_pa_top", height = 300)
+                                             
+                                             
+                                        )
+                                        ,box(width=5,title="Planning Area Population Bottom 5",plotOutput("pop_pa_top2", height = 300)
+                                             
+                                             
+                                        )
+                                        ,box(width=5,title="Planning Area Population Bottom 5"
+                                             
                                              
                                         )
                                         
                                         
                                         
                                         )
+                                    
                                     
                                     
                             ),
@@ -131,7 +173,7 @@ server <- function(input, output, session) {
     
     output$pop_pa_map <- renderTmap({
         tmap_mode("plot")
-        tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==2019,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
+        tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==2011,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
                      legend.hist = TRUE, 
                      legend.is.portrait = TRUE,
                      legend.hist.z = 0.2)+ 
@@ -144,16 +186,53 @@ server <- function(input, output, session) {
                                                                                             frame = FALSE)
     })
     
+    
+    
+    
+    output$pop_pa_top <- renderPlot({
+        ggplot(data=df_box_2[df_box_2$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
+            geom_bar(stat="identity") + theme(legend.position="bottom")+
+            geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
+        
+        
+    })
+    
+    
+    output$pop_pa_top2 <- renderPlot({
+        ggplot(data=df_box_3[df_box_3$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
+            geom_bar(stat="identity") + theme(legend.position="bottom")+
+            geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
+        
+        
+    })
+    
+    
+    
+    
+    
+    
     observe({
         var_year <- input$slider
         
-        tmapProxy("pop_pa_map", session, {
-                 tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==var_year,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
+        output$pop_pa_map <- renderTmap({
+            tmap_mode("plot")
+            tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==input$slider,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
                                                                                              legend.hist = TRUE, 
                                                                                              legend.is.portrait = TRUE,
-                                                                                             legend.hist.z = 0.2)
-            
-            })
+                                                                                             legend.hist.z = 0.2)+ 
+                tm_compass(type="arrow", size = 2) +
+                tm_scale_bar(width = 0.45) +
+                tm_grid() +tm_text("PLN_AREA_C", size =0.7)+ tm_borders(alpha = 0.6)+ tm_layout(legend.outside = TRUE,
+                                                                                                legend.height = 0.45, 
+                                                                                                legend.width = 4.0,
+                                                                                                legend.position = c("right", "bottom"),
+                                                                                                frame = FALSE)
+        })
+        
+        
+        
+        
+       
     })
     
     
