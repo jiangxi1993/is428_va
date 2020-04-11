@@ -1,5 +1,5 @@
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally')
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate')
 
 
 
@@ -27,8 +27,6 @@ SG_2014_planningarea <- st_read(dsn = "./../Data/GEO", layer = "MP14_PLNG_AREA_W
 population_data_10_19<-read_csv("./../Data/Residential_Planning/respopagesextod2011to2019.csv")
 
 
-population_data_10_19<-read_csv("./../Data/Residential_Planning/respopagesextod2011to2019.csv")
-
 young=c("0_to_4","10_to_14","15_to_19","20_to_24")
 active=c("25_to_29","30_to_34","35_to_39","40_to_44","45_to_49","5_to_9","50_to_54","55_to_59","60_to_64")
 aged=c("65_to_69","70_to_74","75_to_79","80_to_84","85_and_over")
@@ -54,13 +52,13 @@ out_pop <-out_pop %>% mutate(Old_ratio = x.Aged/Total_pop)
 out_pop_10_19 <-out_pop %>% mutate(Active_ratio=1-Old_ratio-Young_ratio)
 
 out_pop_10_19[[2]] <- toupper(out_pop_10_19[[2]])
+
+out_pop_10_19[[1]] <- year(mdy((out_pop_10_19[[1]])))
 view(out_pop_10_19)
 
 SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = c("PLN_AREA_N" = "PA"))
 
 str(SG_2014_planningarea_pop )
-
-
 
 
 
@@ -98,12 +96,17 @@ ui <- dashboardPage(skin = "green",
                             tabItem(tabName = "Introduction",
                                     column(12,height=550,box(width=9,title="Singapore population distribution by Planning Area",
                                 
-                                        tmapOutput("pop_pa_map",height = 550)
+                                        tmapOutput("pop_pa_map",height = 550))
+                                        ,box(width=3,title="Contro Panel", sliderInput("slider", "Year :", min = 2011, max=2019,8)
                                         
-                                        ))
-                                    
-                                    
-                                    
+                                        )
+                                        ,box(width=3,title="Planning Area Highest Population", sliderInput("slider", "Year :", min = 2011, max=2019,8)
+                                             
+                                        )
+                                        
+                                        
+                                        
+                                        )
                                     
                                     
                             ),
@@ -123,7 +126,8 @@ ui <- dashboardPage(skin = "green",
 
 
 server <- function(input, output, session) {
-
+     
+ 
     
     output$pop_pa_map <- renderTmap({
         tmap_mode("plot")
@@ -138,13 +142,19 @@ server <- function(input, output, session) {
                                                                                             legend.width = 4.0,
                                                                                             legend.position = c("right", "bottom"),
                                                                                             frame = FALSE)
-        
     })
     
     observe({
+        var_year <- input$slider
         
+        tmapProxy("pop_pa_map", session, {
+                 tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==var_year,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
+                                                                                             legend.hist = TRUE, 
+                                                                                             legend.is.portrait = TRUE,
+                                                                                             legend.hist.z = 0.2)
+            
+            })
     })
-
     
     
 }	
