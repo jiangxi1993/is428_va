@@ -85,26 +85,143 @@ view(df_box_3)
 # Preparation for bar chart tail 5 BOX 4
 
 agg_year_total <- out_pop_10_19[, sum(Total_pop), by = Time]
-agg_year_total=rep("Total",nrow(agg_year_total))
-names(agg_year_total)[2] <- "Population"
+
+names(agg_year_total)[2] <- "Total_population"
 
 view(agg_year_total)
 
-#df_region=SG_2014_planningarea_pop %>% st_drop_geometry()
-
-#view(df_region)
-#class(df_region)
-
-
-#df_by_region_pop_agg <- with(df_region, aggregate(Total_pop, by = list(Time = Time, REGION_N  = REGION_N  ), FUN = sum))
-
-#view(df_by_region_pop_agg)
-
-#names(df_by_region_pop_agg)[3] <- "Population"
 
 
 
-#view(Line_df5)
+df_region=SG_2014_planningarea_pop %>% st_drop_geometry()
+
+View(df_region)
+str(df_region)
+
+
+df_year_central <- df_region[df_region$REGION_C=="CR",]
+
+str(df_year_central)
+
+df_year_central_agg <- aggregate(df_year_central$Total_pop, by=list(Time=df_year_central$Time), FUN=sum)
+
+names(df_year_central_agg )[2] <- "Central"
+
+str(df_year_central_agg)
+
+View(df_year_central_agg)
+
+
+
+df_year_west <- df_region[df_region$REGION_C=="WR",]
+
+str(df_year_west )
+
+df_year_west_agg <- aggregate(df_year_west$Total_pop, by=list(Time=df_year_west$Time), FUN=sum)
+
+names(df_year_west_agg )[2] <- "West"
+
+str(df_year_west_agg)
+
+View(df_year_west_agg)
+
+
+
+df_year_east <- df_region[df_region$REGION_C=="ER",]
+
+str(df_year_east )
+
+df_year_east_agg <- aggregate(df_year_east$Total_pop, by=list(Time=df_year_east$Time), FUN=sum)
+
+names(df_year_east_agg )[2] <- "East"
+
+str(df_year_east_agg)
+
+View(df_year_east_agg)
+
+
+
+df_year_North <- df_region[df_region$REGION_C=="NR",]
+
+str(df_year_North )
+
+df_year_North_agg <- aggregate(df_year_North$Total_pop, by=list(Time=df_year_North$Time), FUN=sum)
+
+names(df_year_North_agg )[2] <- "North"
+
+str(df_year_North_agg)
+
+View(df_year_North_agg)
+
+
+df_year_ner <- df_region[df_region$REGION_C=="NER",]
+
+str(df_year_ner )
+
+df_year_ner_agg <- aggregate(df_year_ner$Total_pop, by=list(Time=df_year_ner$Time), FUN=sum)
+
+names(df_year_ner_agg )[2] <- "North_East"
+
+str(df_year_ner_agg)
+
+View(df_year_ner_agg)
+
+
+df_line_1=merge(agg_year_total , df_year_central_agg, by = "Time")
+df_line_2=merge(df_line_1 , df_year_east_agg, by = "Time")
+df_line_3=merge(df_line_2 , df_year_west_agg, by = "Time")
+df_line_4=merge(df_line_3 , df_year_North_agg, by = "Time")
+df_line_5=merge(df_line_4 , df_year_ner_agg, by = "Time")
+
+
+str(df_line_5)
+
+View(df_line_5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #UI Section
 
@@ -120,8 +237,8 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     sidebar <-dashboardSidebar(
                         sidebarMenu(
-                            menuItem(text = "Population",
-                                     tabName = "Population",
+                            menuItem(text = "Introduction",
+                                     tabName = "Introduction",
                                      icon = icon("home")
                             ),
                             menuItem(text = "Dashboard 1",
@@ -138,14 +255,14 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     body <- dashboardBody(
                         tabItems(
-                            tabItem(tabName = "Population",
+                            tabItem(tabName = "Introduction",
                                     column(7,height=550,box(width=NULL,title="Singapore population distribution by Planning Area",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
                                         
                                         ,
                                         box(width=NULL,title="Total Singapore Population by Region"
-                                           , plotOutput("pop_pa_top_reg", height = 300)
+                                           , plotOutput("pop_pa_top_reg", height = 280)
                                              
                                         )
                                         
@@ -209,12 +326,22 @@ server <- function(input, output, session) {
                                                                                             frame = FALSE)
     })
     
-    output$reg <- renderPlot({
-        ggplot(data=df_box_2[df_box_2$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
-            geom_bar(stat="identity") + theme(legend.position="bottom")+
-            geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
-        
-        
+    output$pop_pa_top_reg<- renderPlot({
+      
+        ggplot(df_line_5, aes(x=Time,label = rownames(df_line_5))) + 
+           # geom_line(aes(y =  Total_population ), color = "darkred") + 
+            geom_line(aes(y = Central ), color="steelblue",linetype="dotted",size=2)  + 
+            geom_line(aes(y = West ), color="green",linetype="dotted",size=2) +
+            geom_line(aes(y = East ), color="darkred",linetype="dotted",size=2) +
+            geom_line(aes(y = North ), color="orange",linetype="dotted",size=2)+
+            geom_line(aes(y = North_East ), color="#CC79A7",linetype="dotted",size=2)+
+            theme(legend.position="top") + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+
+              labs(y="Popuplation", x = "Year ")+ scale_x_continuous( breaks=function(x) pretty(x, n=9))+
+            geom_text(aes(x = 2011,y = 936710 , label = "Central", color = "steelblue")) + 
+            geom_text(aes(x = 2012,y = 900120 	, label = "West", color = "green")) + 
+            geom_text(aes(x = 2013,y = 	694140, label = "East", color = "darkred")) + 
+            geom_text(aes(x = 2014,y = 521480, label = "North", color = "orange"))+ 
+            geom_text(aes(x = 2014,y = 836120 , label = "North East", color = "#CC79A7"))+ theme(legend.position = "none") 
     })
     
     
