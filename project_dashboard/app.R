@@ -85,18 +85,22 @@ view(df_box_3)
 # Preparation for bar chart tail 5 BOX 4
 
 agg_year_total <- out_pop_10_19[, sum(Total_pop), by = Time]
-
-names(agg_year_total)[2] <- "Total_population"
+agg_year_total=rep("Total",nrow(agg_year_total))
+names(agg_year_total)[2] <- "Population"
 
 view(agg_year_total)
 
-df_region=SG_2014_planningarea_pop %>% st_drop_geometry()
+#df_region=SG_2014_planningarea_pop %>% st_drop_geometry()
 
-view(df_region)
-class(df_region)
+#view(df_region)
+#class(df_region)
 
 
-Line_df=merge(x = agg_year_total, y = df_year_central, by = "Time", all.x = TRUE)
+#df_by_region_pop_agg <- with(df_region, aggregate(Total_pop, by = list(Time = Time, REGION_N  = REGION_N  ), FUN = sum))
+
+#view(df_by_region_pop_agg)
+
+#names(df_by_region_pop_agg)[3] <- "Population"
 
 
 
@@ -116,8 +120,8 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     sidebar <-dashboardSidebar(
                         sidebarMenu(
-                            menuItem(text = "Introduction",
-                                     tabName = "Introduction",
+                            menuItem(text = "Population",
+                                     tabName = "Population",
                                      icon = icon("home")
                             ),
                             menuItem(text = "Dashboard 1",
@@ -134,7 +138,7 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     body <- dashboardBody(
                         tabItems(
-                            tabItem(tabName = "Introduction",
+                            tabItem(tabName = "Population",
                                     column(7,height=550,box(width=NULL,title="Singapore population distribution by Planning Area",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
