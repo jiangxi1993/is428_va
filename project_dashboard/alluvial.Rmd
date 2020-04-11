@@ -1,0 +1,72 @@
+---
+title: "Alluvial_animation"
+author: "Choy Yu Min Justin"
+date: "4/11/2020"
+output: html_document
+---
+
+
+Load Packages
+```{r}
+#Package
+packages = c('tidyverse','ggplot2','lubridate','ggalluvial')
+
+for (p in packages){
+    if(!require(p, character.only = T)){
+        install.packages(p)
+    }
+    library(p,character.only = T)
+}
+
+detach("package:dplyr")
+library(dplyr)
+```
+
+Load & Process Data
+```{r}
+census_data <- read_csv("../Data/Census/census.csv")
+
+
+save_data <- census_data %>% 
+  # pivot education
+  pivot_longer(
+    cols = starts_with("Education: "), 
+    names_to = "Education", 
+    values_to = "Education_count",
+    values_drop_na = TRUE
+  )%>%
+
+  # pivot Housing
+  pivot_longer(
+    cols = starts_with("Housing: "), 
+    names_to = "Housing", 
+    values_to = "Housing_count",
+    values_drop_na = TRUE
+  )%>%
+  
+  # pivot Income
+  pivot_longer(
+    cols = starts_with("Income: "), 
+    names_to = "Income", 
+    values_to = "Income_count",
+    values_drop_na = TRUE
+  )
+
+```
+Build Charts
+```{r}
+census_data_pivoted <- read_csv("../Data/Census/census_data_pivoted.csv") 
+
+input_data
+ggplot(data = input_data,
+       aes(axis1 = Income, axis2 = Housing, axis3 = Education,
+           y = Housing_count)) +
+  xlab("Demographic") +
+  geom_alluvium(aes(fill = Planning_Area)) +
+  geom_stratum() + geom_text(stat = "stratum", infer.label = TRUE) +
+  theme_minimal() +
+  ggtitle("passengers on the maiden voyage of the Titanic",
+          "stratified by demographics and survival")
+```
+
+

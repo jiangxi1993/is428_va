@@ -1,0 +1,38 @@
+---
+title: "Choropleth_animation"
+author: "Choy Yu Min Justin"
+date: "4/11/2020"
+output: html_document
+---
+
+
+Load Packages
+```{r}
+#Package
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate')
+
+for (p in packages){
+    if(!require(p, character.only = T)){
+        install.packages(p)
+    }
+    library(p,character.only = T)
+}
+
+detach("package:dplyr")
+library(dplyr)
+```
+
+Load Data
+```{r}
+population_data_10_19 <- read_csv("../Data/Residential_Planning/respopagesextod2011to2019.csv")
+
+Population_by_PA <- population_data_10_19 %>%
+  group_by(Time,PA, AG)%>%
+  summarise(Pop_total = sum(Pop)) %>%
+  filter(AG == "0_to_4")
+
+Population_by_PA$Year <- year(mdy(Population_by_PA$Time))
+
+Population_by_PA
+```
+
