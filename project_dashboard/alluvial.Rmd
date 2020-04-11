@@ -59,10 +59,10 @@ Build Charts
 census_data_pivoted <- read_csv("../Data/Census/census_data_pivoted.csv") 
 
 input_data <- census_data_pivoted %>%
-  filter(Planning_Area == "Ang Mo Kio")
+  filter(Planning_Area == "Marine Parade")
   
 ggplot(data = input_data,
-       aes(axis1 = Income, axis2 = Housing, y = Education_count)) +
+       aes(axis1 = Income, axis2 = Education, axis3 = Housing, y = Education_count)) +
   xlab("Demographic") +
   geom_alluvium(aes(fill = Education)) +
   geom_stratum() + geom_text(stat = "stratum", infer.label = TRUE) +
