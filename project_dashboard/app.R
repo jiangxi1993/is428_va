@@ -237,8 +237,8 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     sidebar <-dashboardSidebar(
                         sidebarMenu(
-                            menuItem(text = "Introduction",
-                                     tabName = "Introduction",
+                            menuItem(text = "Population",
+                                     tabName = "Population",
                                      icon = icon("home")
                             ),
                             menuItem(text = "Dashboard 1",
@@ -255,7 +255,7 @@ ui <- dashboardPage(skin = "green",
                     #--------------------------- dashboard sidebar ----------------------------
                     body <- dashboardBody(
                         tabItems(
-                            tabItem(tabName = "Introduction",
+                            tabItem(tabName = "Population",
                                     column(7,height=550,box(width=NULL,title="Singapore population distribution by Planning Area",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
