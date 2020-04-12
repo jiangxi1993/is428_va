@@ -1,5 +1,5 @@
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski')
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski','ggtern')
 
 
 
@@ -13,10 +13,12 @@ for (p in packages){
 }
 
 
-detach("package:dplyr")
+#detach("package:dplyr")
 library(dplyr)
-install_version("ggplot2", version = "3.2.1", repos = "http://cran.us.r-project.org")
-library(ggplot2)
+
+#install_version("ggplot2", version = "3.2.1", repos = "http://cran.us.r-project.org")
+#library(ggplot2)
+
 
 
 #Preparation for data map box 1
@@ -66,28 +68,9 @@ SG_2014_planningarea_pop <- left_join(SG_2014_planningarea, out_pop_10_19, by = 
 view(SG_2014_planningarea_pop )
 view(SG_2014_planningarea_pop )
 
-
-# Preparation for bar chart top 5 BOX 2
-df_box_2 <- out_pop_10_19
-
-setDT(df_box_2)
-df_box_2 <- df_box_2[order(-Total_pop), .SD[1:5], Time]
-
-#view(df_box_2)
-
-# Preparation for bar chart tail 5 BOX 3
-df_box_3 <- out_pop_10_19[out_pop_10_19$Total_pop>1,]
-
-setDT(df_box_2)
-df_box_3 <- df_box_3[order(Total_pop), .SD[1:5], Time]
-
-#view(df_box_3)
-
-
-
 # Preparation for bar chart tail 5 BOX 4
 
-agg_year_total <- out_pop_10_19[, sum(Total_pop), by = Time]
+agg_year_total <- aggregate(out_pop_10_19$Total_pop, by=list(Time=out_pop_10_19$Time), FUN=sum) 
 
 names(agg_year_total)[2] <- "Total_population"
 
@@ -170,55 +153,28 @@ str(df_year_ner_agg)
 View(df_year_ner_agg)
 
 
-df_line_1=merge(agg_year_total , df_year_central_agg, by = "Time")
-df_line_2=merge(df_line_1 , df_year_east_agg, by = "Time")
-df_line_3=merge(df_line_2 , df_year_west_agg, by = "Time")
-df_line_4=merge(df_line_3 , df_year_North_agg, by = "Time")
-df_line_5=merge(df_line_4 , df_year_ner_agg, by = "Time")
-
-
-str(df_line_5)
-
-View(df_line_5)
-
-
-
-#----- Tab 2 age
 
 
 
 
+# Preparation for bar chart top 5 BOX 2
+df_box_2 <- out_pop_10_19
+
+setDT(df_box_2)
+df_box_2 <- df_box_2[order(-Total_pop), .SD[1:5], Time]
+
+#view(df_box_2)
+
+# Preparation for bar chart tail 5 BOX 3
+df_box_3 <- out_pop_10_19[out_pop_10_19$Total_pop>1,]
+
+setDT(df_box_2)
+df_box_3 <- df_box_3[order(Total_pop), .SD[1:5], Time]
+
+#view(df_box_3)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+view(out_pop_10_19)
 
 
 
@@ -323,7 +279,7 @@ ui <- dashboardPage(skin = "green",
                                    box(width=NULL,title="Aging population group by PA",plotOutput("lolipop_ani", height = 500)
                                        
                                    )
-                                   ,box(width=NULL,title="Planning Area Age group contribution",plotOutput("tern_age", height = 500)
+                                   ,box(width=NULL,title="Age group penetration by planning area",plotOutput("tern_age", height = 500)
                                         
                                         
                                         
@@ -358,16 +314,22 @@ server <- function(input, output, session) {
     })
     
     output$pop_pa_top_reg<- renderPlot({
+            df_line_1<-merge(agg_year_total , df_year_central_agg, by = "Time")
+            df_line_2<-merge(df_line_1 , df_year_east_agg, by = "Time")
+            df_line_3<-merge(df_line_2 , df_year_west_agg, by = "Time")
+            df_line_4<-merge(df_line_3 , df_year_North_agg, by = "Time")
+            df_line_6<-merge(df_line_4 , df_year_ner_agg, by = "Time")
+            
+            
       
-        ggplot(df_line_5, aes(x=Time,label = rownames(df_line_5))) + 
-           # geom_line(aes(y =  Total_population ), color = "darkred") + 
-            geom_line(aes(y = Central ), color="steelblue",linetype="dotted",size=2)  + 
+        ggplot(df_line_6, aes(x=Time)) + geom_line(aes(y = Central ), color="steelblue",linetype="dotted",size=2)  + 
             geom_line(aes(y = West ), color="green",linetype="dotted",size=2) +
             geom_line(aes(y = East ), color="darkred",linetype="dotted",size=2) +
             geom_line(aes(y = North ), color="orange",linetype="dotted",size=2)+
             geom_line(aes(y = North_East ), color="#CC79A7",linetype="dotted",size=2)+
             theme(legend.position="top") + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+
               labs(y="Popuplation", x = "Year ")+ scale_x_continuous( breaks=function(x) pretty(x, n=9))+
+          
             geom_text(aes(x = 2011,y = 936710 , label = "Central", color = "steelblue")) + 
             geom_text(aes(x = 2012,y = 900120 	, label = "West", color = "green")) + 
             geom_text(aes(x = 2013,y = 	694140, label = "East", color = "darkred")) + 
@@ -390,6 +352,7 @@ server <- function(input, output, session) {
         ggplot(data=df_box_3[df_box_3$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
             geom_bar(stat="identity") + theme(legend.position="bottom")+
             geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
+      
     })
     
     
@@ -420,13 +383,13 @@ server <- function(input, output, session) {
     
     df_lolipop = out_pop_10_19[out_pop_10_19 $x.Aged>0,]
     p<- ggplot( df_lolipop,
-               aes(x = reorder(PLN_AREA_N , x.Aged), y = x.Aged, color = PLN_AREA_N )) +
+               aes(x = reorder(PA , x.Aged), y = x.Aged, color = PA)) +
         geom_point(stat = 'identity', size = 5) +
         geom_segment(aes(
             y=100,
-            x = PLN_AREA_N ,
+            x = PA ,
             yend = x.Aged,
-            xend = PLN_AREA_N )
+            xend = PA )
         )+
         coord_flip() 
     
@@ -445,7 +408,41 @@ server <- function(input, output, session) {
              contentType = 'image/gif'
         )}, deleteFile = TRUE)
         
+     
+    
+    output$pop_pa_top2 <- renderPlot({
+        ggplot(data=df_box_3[df_box_3$Time==input$slider,], aes(x = PA, y=Total_pop ,fill=PA)) +
+            geom_bar(stat="identity") + theme(legend.position="bottom")+
+            geom_text(aes(label=Total_pop), hjust=1.6, color="white", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+ coord_flip()
+    
+        
+    })
+    
+    
+    output$tern_age <- renderPlot({
+      data_input=out_pop_10_19[out_pop_10_19$Time==2019,]#input$slider_age
+      data_input= data_input[data_input$Total_pop>0,]
+      view( data_input)
+      
+      
+      plot <- ggtern(data = data_input,
+                     aes(Young_ratio, Old_ratio,Active_ratio))
+      plot + stat_density_tern(geom = 'polygon',
+                               n         = 200,
+                               aes(fill  = ..level..,
+                                   alpha = ..level..)) +
+        geom_point() +
+        theme_rgbw() +
+        labs(title = "Tenrary plot for singapore population by planning area")    +
+        scale_fill_gradient(low = "blue",high = "red")  +
+        guides(color = "none", fill = "none", alpha = "none")+ theme(text = element_text(size = 13, margin = margin()))
+      
+      plot
 
+    })
+    
+    
+    
     
         
         
