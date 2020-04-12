@@ -220,7 +220,7 @@ list_for_drop_down =unique(census_data_pivoted[,"Planning_Area"])
 
 #UI Section
 
-#library(plotly)
+library(plotly)
 
 tmap_mode("plot")
 ui <- dashboardPage(skin = "green",
@@ -327,7 +327,7 @@ ui <- dashboardPage(skin = "green",
                                           
                                        
                                    )
-                                   ,box(width=NULL,title="Singapore Population Pyramid", plotOutput('age_prya',height = 400)  )
+                                   ,box(width=NULL,title="Age group penetration by planning area", plotlyOutput('tern_age')  )
                                    
                                    
                                    
@@ -638,7 +638,7 @@ server <- function(input, output, session) {
       
 #    })    
         
-    view(pop_reordered_10_19)           
+            
     
     
     
@@ -766,28 +766,17 @@ server <- function(input, output, session) {
 #        data_input=out_pop_10_19[out_pop_10_19$Time==input$slider_age,]#input$slider_age
 #        data_input= data_input[data_input$Total_pop>0,]
 #        view( data_input)
-#        str(data_input)
+        str(data_input)
         
-         
-       
-         pop_reordered_10_19[[1]]= year(mdy(pop_reordered_10_19[[1]]))
-         pop_reordered=pop_reordered_10_19[pop_reordered_10_19$Time==input$slider_age,]
-         
-         pop_pyramid = melt(pop_reordered,id=c("Sex","Time"))
-         
-        view(pop_reordered)
-         pop_pyramid $value[pop_pyramid $Sex == "Females"]  = pop_pyramid $value[pop_pyramid $Sex == "Females"]*-1
-         
-         
-        output$age_prya <- renderPlot({
-          
-          ggplot(pop_pyramid, aes(x = variable , y = value, fill = Sex)) + geom_bar(stat="identity", position="identity") +
+        output$tern_age <- renderPlotly({
+          plot_ly(
+            #   data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
             
-            scale_y_continuous(breaks = seq(-150000, 150000, 50000), labels =   paste0(as.character(c(seq(150000,0,-50000),seq(50000,150000,50000))))) +
-            labs(x = "Age", y = "Population", title =input$slider_age ) +   coord_flip() + theme(text = element_text(size = 12, margin = margin()))
+            data_input, a = ~Old_ratio, b = ~Young_ratio , c = ~`Active_ratio`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
+          ) %>%layout(title=input$slider_age, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE
+          ) 
           
-          
-           })
+        })
         
         
         
