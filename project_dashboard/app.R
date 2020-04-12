@@ -276,7 +276,18 @@ ui <- dashboardPage(skin = "green",
                             ),
                             column(5,
                                    
-                                   box(width=NULL,title="Aging population group by PA",plotOutput("lolipop_ani", height = 500)
+                                   tabBox(width=NULL,
+                                          tabPanel("Young population group by PA",plotOutput("lolipop_ani_young", height = 500)),
+                                          tabPanel("Economy Active population group by PA",plotOutput("lolipop_ani_active", height = 500)),
+                                          tabPanel("Aging population group by PA",plotOutput("lolipop_ani", height = 500))
+                                                              
+                                                              
+                                                              
+                                                              
+                                          
+                                          
+                                          
+                                          
                                        
                                    )
                                    ,box(width=NULL,title="Age group penetration by planning area",plotOutput("tern_age", height = 500)
@@ -382,6 +393,7 @@ server <- function(input, output, session) {
 
     
     df_lolipop = out_pop_10_19[out_pop_10_19 $x.Aged>0,]
+    
     p<- ggplot( df_lolipop,
                aes(x = reorder(PA , x.Aged), y = x.Aged, color = PA)) +
         geom_point(stat = 'identity', size = 5) +
@@ -394,10 +406,57 @@ server <- function(input, output, session) {
         coord_flip() 
     
     z<- p +transition_states(Time,transition_length = 1,state_length = 2)+transition_time(Time)+labs(title = "Year: {as.integer(frame_time)}",x="Popuplation", y = "PA") +
-        theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)+theme(axis.text.x=element_text(angle=45,size = rel(0.9), margin = margin(0.3, unit = "cm"),vjust =1))
+        theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)+theme(axis.text.x=element_text(angle=90,size = rel(0.9), margin = margin(0.3, unit = "cm"),vjust =1))
     
     #ani_pop<animate(z)
     anim_save("lolipop_outfile.gif", animate(z)) 
+    
+    
+    
+    
+    df_lolipop_young = out_pop_10_19[out_pop_10_19 $x.Young>0,]
+    
+    p1<- ggplot( df_lolipop_young,
+                aes(x = reorder(PA , x.Young), y = x.Young, color = PA)) +
+      geom_point(stat = 'identity', size = 5) +
+      geom_segment(aes(
+        y=100,
+        x = PA ,
+        yend = x.Young,
+        xend = PA )
+      )+
+      coord_flip() 
+    
+    z1<- p1 +transition_states(Time,transition_length = 1,state_length = 2)+transition_time(Time)+labs(title = "Year: {as.integer(frame_time)}",x="Popuplation", y = "PA") +
+      theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)+theme(axis.text.x=element_text(angle=90,size = rel(0.9), margin = margin(0.3, unit = "cm"),vjust =1))
+    
+    #ani_pop<animate(z)
+    anim_save("lolipop_young_outfile.gif", animate(z1)) 
+    
+    
+    
+    df_lolipop_active = out_pop_10_19[out_pop_10_19 $x.Economy_Active>0,]
+    
+    p2<- ggplot( df_lolipop_active,
+                 aes(x = reorder(PA , x.Economy_Active), y = x.Economy_Active, color = PA)) +
+      geom_point(stat = 'identity', size = 5) +
+      geom_segment(aes(
+        y=100,
+        x = PA ,
+        yend = x.Economy_Active,
+        xend = PA )
+      )+
+      coord_flip() 
+    
+    z2<- p2 +transition_states(Time,transition_length = 1,state_length = 2)+transition_time(Time)+labs(title = "Year: {as.integer(frame_time)}",x="Popuplation", y = "PA") +
+      theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)+theme(axis.text.x=element_text(angle=90,size = rel(0.9), margin = margin(0.3, unit = "cm"),vjust =1))
+    
+    
+    #ani_pop<animate(z)
+    anim_save("lolipop_active_outfile.gif", animate(z2)) 
+    
+    
+    
     
   
 
@@ -407,6 +466,23 @@ server <- function(input, output, session) {
         list(src = "lolipop_outfile.gif", align = "center",
              contentType = 'image/gif'
         )}, deleteFile = TRUE)
+    
+    
+    
+    output$lolipop_ani_young <- renderImage({
+      
+      list(src = "lolipop_young_outfile.gif", align = "center",
+           contentType = 'image/gif'
+      )}, deleteFile = TRUE)
+    
+    
+    
+    output$lolipop_ani_active <- renderImage({
+      
+      list(src = "lolipop_active_outfile.gif", align = "center",
+           contentType = 'image/gif'
+      )}, deleteFile = TRUE)
+    
         
      
     
