@@ -1,5 +1,5 @@
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski','ggtern')
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','RColorBrewer','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski','ggtern')
 
 
 
@@ -190,7 +190,7 @@ tmap_mode("plot")
 ui <- dashboardPage(skin = "green",
                     
                     #---------------------------- dashboard header ----------------------------                                    
-                    header <- dashboardHeader(title = "Precision Policy And Planning",
+                    header <- dashboardHeader(title = "Our Homeland x Facts",
                                               titleWidth = 300),
                     
                     
@@ -205,8 +205,8 @@ ui <- dashboardPage(skin = "green",
                                      tabName = "Age",
                                      icon = icon("dice-one")
                             ),
-                            menuItem(text = "Dashboard 2",
-                                     tabName = "Dashboard 2",
+                            menuItem(text = "Education | Income",
+                                     tabName = "Education",
                                      icon = icon("dice-two")
                             )
                         )
@@ -216,7 +216,7 @@ ui <- dashboardPage(skin = "green",
                     body <- dashboardBody(
                         tabItems(
                             tabItem(tabName = "Population",
-                                    column(7,height=550,box(width=NULL,title="Singapore Population (Trend Finder)",
+                                    column(7,height=550,box(width=NULL,title="Singapore Population (Summary view)",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
                                         
@@ -300,8 +300,9 @@ ui <- dashboardPage(skin = "green",
                             
                             
                         
-                    )
-                    )
+                    ),
+                    tabItem(tabName = "Education"
+                    ))
                     
 ))
 
@@ -520,16 +521,15 @@ server <- function(input, output, session) {
       
       
     )
-    print(slider_age)
-    data_input=out_pop_10_19[out_pop_10_19$Time==slider_age,]#input$slider_age
+ 
+    data_input=out_pop_10_19[out_pop_10_19$Time==2011,]#input$slider_age
     data_input= data_input[data_input$Total_pop>0,]
     view( data_input)
     str(data_input)
     
     output$tern_age <- renderPlotly({
-      plot_ly(
-        data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = "Spectral"
-      ) %>%layout(title=slider_age, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE
+      plot_ly(data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = "Blues", type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=2 ,mode="markers",marker=list( opacity=1),colors =data_input$PA #"Spectral"
+      ) %>%layout(title=2011, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE ,autosize=TRUE                  #data_input$Old_ratio*10
         ) 
       
     })
@@ -604,6 +604,18 @@ server <- function(input, output, session) {
         })    
         
         
+        data_input=out_pop_10_19[out_pop_10_19$Time==input$slider_age,]#input$slider_age
+        data_input= data_input[data_input$Total_pop>0,]
+        view( data_input)
+        str(data_input)
+        
+        output$tern_age <- renderPlotly({
+          plot_ly(
+            data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
+          ) %>%layout(title=input$slider_age, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE
+          ) 
+          
+        })
         
         
         
