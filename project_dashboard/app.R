@@ -1,5 +1,5 @@
 #Package
-packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','GGally','lubridate','RColorBrewer','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski','ggtern')
+packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','ggalluvial','GGally','lubridate','RColorBrewer','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski')#,'ggtern')
 
 
 
@@ -22,7 +22,7 @@ library(dplyr)
 
 
 #Preparation for data map box 1
-
+options(scipen=10000)
 
 
 SG_2014_planningarea <- st_read(dsn = "./../Data/GEO", layer = "MP14_PLNG_AREA_WEB_PL")
@@ -176,11 +176,47 @@ df_box_3 <- df_box_3[order(Total_pop), .SD[1:5], Time]
 
 view(out_pop_10_19)
 
+# view 3
 
 
 
 
+census_data <- read_csv("../Data/Census/census.csv")
 
+
+save_data <- census_data %>% 
+  # pivot education
+  pivot_longer(
+    cols = starts_with("Education: "), 
+    names_to = "Education", 
+    values_to = "Education_count",
+    values_drop_na = TRUE
+  )%>%
+  
+  # pivot Housing
+  pivot_longer(
+    cols = starts_with("Housing: "), 
+    names_to = "Housing", 
+    values_to = "Housing_count",
+    values_drop_na = TRUE
+  )%>%
+  
+  # pivot Income
+  pivot_longer(
+    cols = starts_with("Income: "), 
+    names_to = "Income", 
+    values_to = "Income_count",
+    values_drop_na = TRUE
+  )
+
+write.csv(save_data, "../Data/Census/census_data_pivoted.csv")
+
+
+census_data_pivoted <- read_csv("../Data/Census/census_data_pivoted.csv") 
+
+
+
+list_for_drop_down =unique(census_data_pivoted[,"Planning_Area"])
 
 #UI Section
 
@@ -300,11 +336,44 @@ ui <- dashboardPage(skin = "green",
                             
                             
                         
-                    ),
-                    tabItem(tabName = "Education"
+                    ), #view 3
+                    tabItem(tabName = "Education",
+                            column(12,height=550,box(width=NULL,title="Social mobility: Income, Housing and Qualification" ,
+                                                    
+                                                    plotOutput("sankey_view3",height = 600)
+                            ),
+                            box(width=NULL, 
+                                
+                                column(4,box(width=200, radioButtons("rb_year_income", "Year:",
+                                                                     c("2010" = "2010",
+                                                                       "2015" = "2015"))
+      
+                                      ), box(width=200,
+                                      
+                                      selectInput(
+                                        "select_pa",
+                                        label =  "Select Planning Area" ,
+                                        choices = list_for_drop_down
+                                        )
+                                      )
+                                
+                                )
+                                
+                                
+                            )
+                            
+    
+                            
+                            
+                            )
+                            
                     ))
                     
 ))
+
+
+
+
 
 
 server <- function(input, output, session) {
@@ -330,7 +399,7 @@ server <- function(input, output, session) {
             df_line_6<-merge(df_line_4 , df_year_ner_agg, by = "Time")
             
             
-      
+        
         ggplot(df_line_6, aes(x=Time)) + geom_line(aes(y = Central ), color="steelblue",linetype="dotted",size=2)  + 
             geom_line(aes(y = West ), color="green",linetype="dotted",size=2) +
             geom_line(aes(y = East ), color="darkred",linetype="dotted",size=2) +
@@ -532,13 +601,33 @@ server <- function(input, output, session) {
       ) %>%layout(title=2011, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE ,autosize=TRUE                  #data_input$Old_ratio*10
         ) 
       
+      
     })
     
     
     
-    
+   #Tab 3
+                                
+#    census_data_pivoted[[4]] <- year(mdy((census_data_pivoted[[4]])))
+#    str(census_data_pivoted)
+#    
+#    census_data_pivoted_input<-census_data_pivoted[census_data_pivoted$Year==2010,]
+ 
         
-        
+ #   output$sankey_view3 <- renderPlot({
+
+ #     input_data <- census_data_pivoted_input %>%filter(Planning_Area == "Total")
+      
+#      ggplot(data = input_data,
+ #            aes(axis1 = Income, axis2 = Education, axis3 = Housing, y = Education_count)) +
+#        xlab("Demographic") +
+#        geom_alluvium(aes(fill = Education)) +
+ #       geom_stratum() + geom_text(stat = "stratum", infer.label = TRUE) +
+#        theme_minimal() +
+ #       ggtitle("Total 2010")+ theme(legend.position="top")
+      
+      
+#    })    
         
             
     
@@ -591,6 +680,9 @@ server <- function(input, output, session) {
         }
         
         
+        
+       
+        
         output$pop_pa_age_map <- renderTmap({
             
             tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==input$slider_age,])+tm_fill(var_rb,style = "equal",palette=var_rb_fill, 
@@ -603,6 +695,35 @@ server <- function(input, output, session) {
             
         })    
         
+        if(input$rb_year_income == "2010"){
+          var_year_income<-2010
+          
+        }
+        else if (input$rb_year_income == "2015"){
+          var_year_income<-2015
+          
+        
+        }
+        
+        census_data_pivoted[[4]] <- year(mdy((census_data_pivoted[[4]])))
+        census_data_pivoted_input<-census_data_pivoted[census_data_pivoted$Year== var_year_income ,]
+        print(as.numeric(as.character(input$rb_year_income)))
+        
+         output$sankey_view3 <- renderPlot({
+           
+           input_data <- census_data_pivoted_input %>%
+             filter(Planning_Area == input$select_pa)
+           
+           ggplot(data = input_data,
+                  aes(axis1 = Income, axis2 = Education, axis3 = Housing, y = Education_count)) +
+            xlab("Demographic") +
+            geom_alluvium(aes(fill = Education)) +
+            geom_stratum() + geom_text(stat = "stratum", infer.label = TRUE) +
+             theme_minimal() +
+             ggtitle(input$select_pa)+ theme(legend.position="top")
+           
+         })
+        
         
         data_input=out_pop_10_19[out_pop_10_19$Time==input$slider_age,]#input$slider_age
         data_input= data_input[data_input$Total_pop>0,]
@@ -611,7 +732,9 @@ server <- function(input, output, session) {
         
         output$tern_age <- renderPlotly({
           plot_ly(
-            data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
+            #   data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
+            
+            data_input, a = ~Old_ratio, b = ~Young_ratio , c = ~`Active_ratio`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = (colorRampPalette(brewer.pal(name="Spectral", n = 8))(14)) 
           ) %>%layout(title=input$slider_age, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE
           ) 
           
