@@ -1,4 +1,4 @@
-#Package
+#Package  2020 IS428 jiang xi  hongjun, justin
 packages = c('sf', 'tmap', 'tidyverse','ggplot2','pastecs','data.table','devtools','reshape2','viridis','shiny','shinydashboard','plotly','ggalluvial','GGally','lubridate','RColorBrewer','dplyr','readr', 'gganimate','scales', 'animation','stringr','gapminder','png','gifski')#,'ggtern')
 
 
@@ -357,7 +357,16 @@ ui <- dashboardPage(skin = "green",
                                         )
                                       )
                                 
+                                ), column(4,box(width=200,title="Income",plotOutput("income_bar", height = 300)
+                                  
+                                  
                                 )
+                                ),
+                                column(4,box(width=200,title="Education",plotOutput("edu_bar", height = 300)
+                                             
+                                )
+                                )
+
                                 
                                 
                             )
@@ -591,18 +600,18 @@ server <- function(input, output, session) {
       
     )
  
-    data_input=out_pop_10_19[out_pop_10_19$Time==2011,]#input$slider_age
-    data_input= data_input[data_input$Total_pop>0,]
-    view( data_input)
-    str(data_input)
+#    data_input=out_pop_10_19[out_pop_10_19$Time==2011,]#input$slider_age
+#    data_input= data_input[data_input$Total_pop>0,]
+#    view( data_input)
+#    str(data_input)
     
-    output$tern_age <- renderPlotly({
-      plot_ly(data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = "Blues", type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=2 ,mode="markers",marker=list( opacity=1),colors =data_input$PA #"Spectral"
-      ) %>%layout(title=2011, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE ,autosize=TRUE                  #data_input$Old_ratio*10
-        ) 
+#    output$tern_age <- renderPlotly({
+#      plot_ly(data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = "Blues", type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=2 ,mode="markers",marker=list( opacity=1),colors =data_input$PA #"Spectral"
+#      ) %>%layout(title=2011, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE ,autosize=TRUE                  #data_input$Old_ratio*10
+#        ) 
+#
       
-      
-    })
+#    })
     
     
     
@@ -708,11 +717,11 @@ server <- function(input, output, session) {
         census_data_pivoted[[4]] <- year(mdy((census_data_pivoted[[4]])))
         census_data_pivoted_input<-census_data_pivoted[census_data_pivoted$Year== var_year_income ,]
         print(as.numeric(as.character(input$rb_year_income)))
-        
+        input_data <- census_data_pivoted_input %>%
+             filter(Planning_Area == input$select_pa)
          output$sankey_view3 <- renderPlot({
            
-           input_data <- census_data_pivoted_input %>%
-             filter(Planning_Area == input$select_pa)
+           
            
            ggplot(data = input_data,
                   aes(axis1 = Income, axis2 = Education, axis3 = Housing, y = Education_count)) +
@@ -723,6 +732,35 @@ server <- function(input, output, session) {
              ggtitle(input$select_pa)+ theme(legend.position="top")
            
          })
+         
+         
+         
+         output$edu_bar <- renderPlot({
+          # input_data_edu=input_data[input_data$Housing=="Housing: Others"]
+         #  input_data_edu_x=input_data_edu[input_data_edu$Income=="Income: $1,000 to $2,999"]
+           
+           ggplot(data= input_data , aes(x = Education , y=Education_count ,fill=Education)) +
+             geom_bar(stat="identity") + theme(legend.position="bottom")+
+             geom_text(aes(label=Education_count), hjust=-1.6, color="black", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE)) +theme(axis.title.y=element_blank(),
+                                                                                                                                                                       axis.text.y=element_blank(),
+                                                                                                                                                                       axis.ticks.y=element_blank())+ coord_flip()
+             
+           
+         })
+         
+         
+         output$income_bar <- renderPlot({
+          # input_data_income=input_data[input_data$Housing=="Housing: Others"]
+         #  input_data_income_x=input_data_income[input_data_income$Education=="Education: No Qualification"]
+           ggplot(data= input_data , aes(x = Income, y=Income_count ,fill=Income)) +
+             geom_bar(stat="identity") + theme(legend.position="bottom")+
+             geom_text(aes(label=Income_count), hjust=-1.6, color="black", size=4.5) + scale_y_continuous(labels = function(y) format(y, scientific = FALSE))+  theme(axis.title.y=element_blank(),
+                                                                                                                                                                     axis.text.y=element_blank(),
+                                                                                                                                                                     axis.ticks.y=element_blank())+ coord_flip()
+           
+         })
+         
+         
         
         
         data_input=out_pop_10_19[out_pop_10_19$Time==input$slider_age,]#input$slider_age
