@@ -50,6 +50,13 @@ p<- ggplot(Population_by_PA,
     xend = PA)
   )+
   coord_flip() 
+
+z<- p +transition_states(Year,transition_length = 1,state_length = 2)+transition_time(Year)+labs(title = "Year: {as.integer(frame_time)}") +
+  theme(legend.position = "none") + ease_aes("linear")+ shadow_mark(alpha = 0.3, size = 0.5)
+
+animate(z)
+
+
 ```
 
 
