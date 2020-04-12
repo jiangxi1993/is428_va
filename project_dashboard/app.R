@@ -184,6 +184,7 @@ view(out_pop_10_19)
 
 #UI Section
 
+library(plotly)
 
 tmap_mode("plot")
 ui <- dashboardPage(skin = "green",
@@ -215,12 +216,12 @@ ui <- dashboardPage(skin = "green",
                     body <- dashboardBody(
                         tabItems(
                             tabItem(tabName = "Population",
-                                    column(7,height=550,box(width=NULL,title="Singapore Population Distribution by Planning Area",
+                                    column(7,height=550,box(width=NULL,title="Singapore Population (Trend Finder)",
                                 
                                         tmapOutput("pop_pa_map",height = 550))
                                         
                                         ,
-                                        box(width=NULL,title="Total Singapore Population by Region"
+                                        box(width=NULL,title="Total Singapore Population (Regional Trend Finder)"
                                            , plotOutput("pop_pa_top_reg", height = 280)
                                              
                                         )
@@ -290,11 +291,7 @@ ui <- dashboardPage(skin = "green",
                                           
                                        
                                    )
-                                   ,box(width=NULL,title="Age group penetration by planning area",plotOutput("tern_age", height = 500)
-                                        
-                                        
-                                        
-                                   )
+                                   ,box(width=NULL,title="Age group penetration by planning area", plotlyOutput('tern_age')  )
                                    
                                    
                                    
@@ -312,7 +309,7 @@ ui <- dashboardPage(skin = "green",
 server <- function(input, output, session) {
      
  
-    
+    library(plotly)
     output$pop_pa_map <- renderTmap({
      
         tm_shape(SG_2014_planningarea_pop[SG_2014_planningarea_pop$Time==2011,])+tm_fill('Total_pop',style = "equal",palette="Greens", 
@@ -495,26 +492,46 @@ server <- function(input, output, session) {
     })
     
     
-    output$tern_age <- renderPlot({
-      data_input=out_pop_10_19[out_pop_10_19$Time==2019,]#input$slider_age
-      data_input= data_input[data_input$Total_pop>0,]
-      view( data_input)
+    label = function(txt) {
+      list(
+        text = txt,
+        x = 0.1, y = 1,
+        ax = 0.1, ay = 0,
+        xref = "paper", yref = "paper",
+        align = "bottom",
+        font = list(family = "calibri", size = 15, color = "#3f3f3f"),
+        bgcolor = "white", bordercolor = "Black", borderwidth = 1
+        
+      )
+    }
+    
+    
+    # reusable function for axis formatting
+    axis = function(txt) {
+      list(
+        title = txt, tickformat = ".0%", tickfont = list(size = 10)
+      )
+    }
+    
+    ternaryAxes = list(
+      aaxis = axis("Ageing"),
+      baxis = axis("Young"),
+      caxis = axis("Economy Active")
       
       
-      plot <- ggtern(data = data_input,
-                     aes(Young_ratio, Old_ratio,Active_ratio))
-      plot + stat_density_tern(geom = 'polygon',
-                               n         = 200,
-                               aes(fill  = ..level..,
-                                   alpha = ..level..)) +
-        geom_point() +
-        theme_rgbw() +
-        labs(title = "Tenrary plot for singapore population by planning area")    +
-        scale_fill_gradient(low = "blue",high = "red")  +
-        guides(color = "none", fill = "none", alpha = "none")+ theme(text = element_text(size = 13, margin = margin()))
+    )
+    print(slider_age)
+    data_input=out_pop_10_19[out_pop_10_19$Time==slider_age,]#input$slider_age
+    data_input= data_input[data_input$Total_pop>0,]
+    view( data_input)
+    str(data_input)
+    
+    output$tern_age <- renderPlotly({
+      plot_ly(
+        data_input, a = ~x.Aged, b = ~x.Young, c = ~`x.Economy_Active`, color = ~PA, type = "scatterternary",text=~paste('Aging Ratio:',Old_ratio,"<br>Planning Area:",data_input$PA),size=data_input$Old_ratio*10 ,mode="markers",marker=list( opacity=1),colors = "Spectral"
+      ) %>%layout(title=slider_age, annotations = label("Marker size:Old Age Ratio" ), ternary = ternaryAxes,margin = 0.05,showlegend = TRUE
+        ) 
       
-      plot
-
     })
     
     
